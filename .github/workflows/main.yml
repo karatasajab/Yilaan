@@ -1,22 +1,46 @@
-name: APK Yapici
-on: [push, pull_request]
+name: APK-RELEASER-BOMBASI
+on: 
+  push:
+    tags:
+      - 'v*' # v1.0 gibi etiket atınca otomatik çalışır
+  workflow_dispatch: # Elle başlatabilmen için buton ekledik
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - name: Python Kur
-        uses: actions/setup-python@v2
+      - name: Java Kur
+        uses: actions/setup-java@v4
         with:
-          python-version: '3.8'
+          distribution: 'temurin'
+          java-version: '17'
 
-      - name: Buildozer Kur ve APK Yap
+      - name: Gerekli Paketleri Kur
         run: |
-          sudo apt-get install -y build-essential libffi-dev libssl-dev python3-dev zip unzip openjdk-17-jdk
+          sudo apt-get update
+          sudo apt-get install -y build-essential libffi-dev libssl-dev python3-dev zip unzip libtinfo5
           pip install --user --upgrade buildozer Cython==0.29.33 virtualenv
           export PATH=$PATH:$HOME/.local/bin
-          # OTOMATIK LISANS KABULÜ BURADA:
+
+      - name: APK Derle
+        run: |
+          export PATH=$PATH:$HOME/.local/bin
           yes | buildozer -v android debug
+        
+      - name: APK'yi Bul ve Hazirla
+        run: |
+          mkdir -p final_apk
+          cp bin/*.apk final_apk/
+
+      - name: Releases Kisminda APK Olustur
+        uses: softprops/action-gh-release@v1
+        with:
+          files: final_apk/*.apk
+          tag_name: v${{ github.run_number }}
+          name: Yilan Oyunu Test Sürümü v${{ github.run_number }}
+          body: Samet abinin tavsiyesiyle otomatik releaser eklendi! APK hazir.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
