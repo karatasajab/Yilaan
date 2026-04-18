@@ -1,13 +1,22 @@
 name: APK Yapici
 on: [push, pull_request]
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Buildozer ile APK Bas
-        uses: ArtemSerebriakov/buildozer-action@v1
+
+      - name: Python Kur
+        uses: actions/setup-python@v2
         with:
-          buildozer_version: master
-          python_version: 3.8
+          python-version: '3.8'
+
+      - name: Buildozer Kur ve APK Yap
+        run: |
+          sudo apt-get install -y build-essential libffi-dev libssl-dev python3-dev zip unzip openjdk-17-jdk
+          pip install --user --upgrade buildozer Cython==0.29.33 virtualenv
+          export PATH=$PATH:$HOME/.local/bin
+          buildozer --version
+          buildozer -v android debug
           
